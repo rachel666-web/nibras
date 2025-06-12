@@ -898,23 +898,28 @@
         // =================================================================
 
         async function callGemini(prompt) {
-             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`;
-             const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
-             const response = await fetch(apiUrl, {
+             // This new function calls our secure Netlify Function
+             const functionUrl = '/.netlify/functions/call-gemini';
+        
+             const response = await fetch(functionUrl, {
                  method: 'POST',
                  headers: { 'Content-Type': 'application/json' },
-                 body: JSON.stringify(payload)
+                 body: JSON.stringify({ prompt: prompt })
              });
+        
              if (!response.ok) {
-                 const errorBody = await response.text();
-                 console.error("Gemini API Error:", errorBody);
+                 const errorText = await response.text();
+                 console.error("Netlify Function Error:", errorText);
                  throw new Error(`فشل طلب الـ API بالحالة ${response.status}`);
              }
+        
              const result = await response.json();
+        
              if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
                  return result.candidates[0].content.parts[0].text;
              }
-             console.error("Unexpected Gemini response:", result);
+        
+             console.error("Unexpected Gemini response structure:", result);
              throw new Error("لم يتم العثور على محتوى في استجابة Gemini.");
         }
         
